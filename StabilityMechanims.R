@@ -6,6 +6,7 @@ library(plyr)
 library(gridExtra)
 library(lme4)
 
+
 ####load data from GitHub
 ZooCounts.URL<-getURL("https://raw.githubusercontent.com/Monsauce/Stability-mechanisms/master/ZooplanktonTowCounts.csv")
 ZooCounts<-read.csv(text=ZooCounts.URL)
@@ -126,7 +127,7 @@ coef(logit.model.nauplii)
 
 #plot Figure 3
 Figure3<-ggplot(Mussels, aes(x=Length, y=Binomial.Nauplii))+geom_point()+theme_minimal()+
-  geom_smooth(method = "glm", family="binomial", colour='black',se=FALSE)+
+  geom_smooth(method = "glm", method.args = list(family = "binomial"), colour='black',se=FALSE)+
   ylab("Higher ∆N than nauplii")+
   xlab("Mussel length (mm)")
 
