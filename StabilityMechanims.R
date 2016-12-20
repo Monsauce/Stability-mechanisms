@@ -28,6 +28,11 @@ Points$Site<- "Null"
 Points$Site[1:9] <- "Reference"
 Points$Site[9:16] <- "Farm"
 
+#run SIMPER
+sim <- simper(ZooCounts[2:11], ZooCounts[,1])
+summary(sim)
+
+#plot Figure 1A
 Figure1A<-ggplot(Points, aes(x = MDS1, y = MDS2))+ geom_point(aes(colour=Site,size=3))+xlab("Site")+
   ylab("NMDS 1")+ xlab("NMDS 2")+theme_minimal()+
   scale_colour_manual(values=c("black", "grey"))
@@ -35,6 +40,19 @@ Figure1A<-ggplot(Points, aes(x = MDS1, y = MDS2))+ geom_point(aes(colour=Site,si
 #run ANOSIM
 ZooANOSIM<-anosim(Bray, ZooCounts[,1])
 ZooANOSIM
+
+#test if significant differences between line and between sites in farm
+#subset farm
+Farm<-ZooDensity[ZooDensity$Treatment == "Farm",]
+
+#run ANOVA
+FarmANOVA<-aov(Density~Position, Farm)
+summary(FarmANOVA)
+
+FarmTwoWayANOVA<-aov(Density~Position*Stage, Farm)
+summary(FarmTwoWayANOVA)
+
+FarmTwoWayTukey<-TukeyHSD(FarmTwoWayANOVA)
 
 #density analyses 
 VarianceZoo<-ddply(.data=ZooDensity, .variables=.(Treatment, Stage, Replicate), .fun= summarise, mean = mean(Density))
