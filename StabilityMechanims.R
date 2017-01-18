@@ -6,7 +6,6 @@ library(plyr)
 library(gridExtra)
 library(lme4)
 
-
 ####load data from GitHub
 ZooCounts.URL<-getURL("https://raw.githubusercontent.com/Monsauce/Stability-mechanisms/master/ZooplanktonTowCounts.csv")
 ZooCounts<-read.csv(text=ZooCounts.URL)
@@ -18,18 +17,21 @@ Isotopes.URL<-getURL("https://raw.githubusercontent.com/Monsauce/Stability-mecha
 Isotopes<-read.csv(text=Isotopes.URL)
 
 ####copepod community composition 
+#remove site with zero counts and an many zeros 
+ZooCounts<-ZooCounts[-c(1, 2, 7, 14, 15, 16, 17),]
+
 #Run NMDS
-Bray<-vegdist(ZooCounts[2:11], method="bray")
+Bray<-vegdist(ZooCounts[5:15], method="bray")
 NMDS<-metaMDS(Bray, k=2)
 Points<-as.data.frame(NMDS$points)
 
 #plot NMDS
 Points$Site<- "Null"
-Points$Site[1:9] <- "Reference"
-Points$Site[9:16] <- "Farm"
+Points$Site[1:9] <- "Farm"
+Points$Site[10:17] <- "Reference"
 
 #run SIMPER
-sim <- simper(ZooCounts[2:11], ZooCounts[,1])
+sim <- simper(ZooCounts[5:15], ZooCounts[,1])
 summary(sim)
 
 #plot Figure 1A
@@ -38,7 +40,7 @@ Figure1A<-ggplot(Points, aes(x = MDS1, y = MDS2))+ geom_point(aes(colour=Site,si
   scale_colour_manual(values=c("black", "grey"))
 
 #run ANOSIM
-ZooANOSIM<-anosim(Bray, ZooCounts[,1])
+ZooANOSIM<-anosim(Bray, ZooCounts[,1], permutations = 999)
 ZooANOSIM
 
 #test if significant differences between line and between sites in farm
@@ -55,7 +57,7 @@ summary(FarmTwoWayANOVA)
 FarmTwoWayTukey<-TukeyHSD(FarmTwoWayANOVA)
 
 #density analyses 
-VarianceZoo<-ddply(.data=ZooDensity, .variables=.(Treatment, Stage, Replicate), .fun= summarise, mean = mean(Density))
+ReplicateZoo<-ddply(.data=ZooDensity, .variables=.(Treatment, Stage, Replicate), .fun= summarise, mean = mean(Density))
 
 AverageZoo<-ddply(.data=ZooDensity, .variables=.(Treatment, Stage), .fun= summarise, mean = mean(Density), se=sd(Density)/sqrt(length(Density)))
 
@@ -69,7 +71,7 @@ Figure1B<-ggplot(AverageZoo, aes(x =Stage , y = mean, fill=Treatment))+geom_bar(
 Figure1<-grid.arrange(Figure1A,Figure1B,ncol=2)
 
 #run ANOVA between farm and reference sites 
-DensityANOVA<-aov(mean~Treatment*Stage, VarianceZoo)
+DensityANOVA<-aov(mean~Treatment*Stage, ReplicateZoo)
 Tukey<-TukeyHSD(DensityANOVA)
 
 ####stable isotopes 
